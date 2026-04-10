@@ -143,9 +143,15 @@ class _ChatScreenState extends State<ChatScreen> {
             right: 8,
             bottom: 80,
             child: IgnorePointer(
-              child: Container(
-                width: 130,
-                height: 180,
+              child: Builder(
+                builder: (context) {
+                  // チャット領域の約3割の高さ
+                  final screenHeight = MediaQuery.of(context).size.height;
+                  final charHeight = screenHeight * 0.3;
+                  final charWidth = charHeight * 0.65; // 人物の縦長比率
+                  return Container(
+                    width: charWidth,
+                    height: charHeight,
                 decoration: BoxDecoration(
                   color: const Color(0xFFE8D5F5).withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(16),
@@ -168,6 +174,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ],
                 ),
+                  );
+                },
               ),
             ),
           ),
