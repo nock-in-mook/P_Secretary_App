@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/message.dart';
+import '../services/api_service.dart';
 import '../widgets/chat_bubble.dart';
 
 /// メインチャット画面
@@ -109,7 +110,7 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
@@ -126,20 +127,33 @@ class _ChatScreenState extends State<ChatScreen> {
     _controller.clear();
     _scrollToBottom();
 
-    // デモ用：秘書の自動返答（後でAPI接続に置き換え）
-    Future.delayed(const Duration(milliseconds: 800), () {
+    // FastAPI経由でGeminiに問い合わせ
+    try {
+      final response = await ApiService.sendMessage(message: text);
       if (!mounted) return;
       setState(() {
         _messageCounter++;
         _messages.add(Message(
           id: 'bot_$_messageCounter',
-          content: 'かしこまりました！確認いたしますね。',
+          content: response.reply,
           isUser: false,
           timestamp: DateTime.now(),
         ));
       });
       _scrollToBottom();
-    });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _messageCounter++;
+        _messages.add(Message(
+          id: 'err_$_messageCounter',
+          content: '通信エラーが発生しました: $e',
+          isUser: false,
+          timestamp: DateTime.now(),
+        ));
+      });
+      _scrollToBottom();
+    }
   }
 
   /// キャラパネルの高さ分を末尾メッセージの推定行数で埋めて、
