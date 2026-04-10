@@ -31,11 +31,71 @@ class _ChatScreenState extends State<ChatScreen> {
         id: '1',
         content: '10時から会議があったよね？',
         isUser: true,
-        timestamp: DateTime.now().subtract(const Duration(minutes: 4)),
+        timestamp: DateTime.now().subtract(const Duration(minutes: 14)),
       ),
       Message(
         id: '2',
         content: 'はい！10時からチームミーティングが入っています。場所はオンライン（Google Meet）です。議題は先週のスプリントレビューですね。',
+        isUser: false,
+        timestamp: DateTime.now().subtract(const Duration(minutes: 13)),
+      ),
+      Message(
+        id: '3',
+        content: '了解。あと午後の予定も教えて',
+        isUser: true,
+        timestamp: DateTime.now().subtract(const Duration(minutes: 12)),
+      ),
+      Message(
+        id: '4',
+        content: '午後は14時からデザインレビュー、16時から1on1が入っています。デザインレビューの資料はまだ共有されていないようですが、確認しましょうか？',
+        isUser: false,
+        timestamp: DateTime.now().subtract(const Duration(minutes: 11)),
+      ),
+      Message(
+        id: '5',
+        content: 'お願い！あと明日のリマインダーもセットして',
+        isUser: true,
+        timestamp: DateTime.now().subtract(const Duration(minutes: 10)),
+      ),
+      Message(
+        id: '6',
+        content: 'かしこまりました！明日のリマインダーですね。何時に、どんな内容で設定しましょうか？',
+        isUser: false,
+        timestamp: DateTime.now().subtract(const Duration(minutes: 9)),
+      ),
+      Message(
+        id: '7',
+        content: '朝9時に「企画書の締め切り」で',
+        isUser: true,
+        timestamp: DateTime.now().subtract(const Duration(minutes: 8)),
+      ),
+      Message(
+        id: '8',
+        content: '設定しました！\n\n📋 リマインダー\n・明日 9:00「企画書の締め切り」\n\n当日の朝にお知らせしますね。前日の夜にも一度リマインドしましょうか？',
+        isUser: false,
+        timestamp: DateTime.now().subtract(const Duration(minutes: 7)),
+      ),
+      Message(
+        id: '9',
+        content: 'うん、前日夜もお願い',
+        isUser: true,
+        timestamp: DateTime.now().subtract(const Duration(minutes: 6)),
+      ),
+      Message(
+        id: '10',
+        content: '了解です！今夜20時にもリマインドを入れておきますね。忘れずにお届けします！',
+        isUser: false,
+        timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
+      ),
+      Message(
+        id: '11',
+        content: 'ありがとう、頼りになるね',
+        isUser: true,
+        timestamp: DateTime.now().subtract(const Duration(minutes: 4)),
+      ),
+      Message(
+        id: '12',
+        content: 'えへへ、ありがとうございます！いつでも頼ってくださいね。他に何かありますか？',
         isUser: false,
         timestamp: DateTime.now().subtract(const Duration(minutes: 3)),
       ),
@@ -82,6 +142,35 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  /// キャラパネルの高さ分を末尾メッセージの推定行数で埋めて、
+  /// 該当するメッセージのindexを返す
+  Set<int> get _narrowIndices {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final charPanelHeight = screenHeight * 0.3;
+    // 1行あたりの推定高さ（フォント15 * 行間1.4 + パディング等）
+    const lineHeight = 24.0;
+    // 吹き出しのパディング・マージン分
+    const bubbleOverhead = 30.0;
+
+    final result = <int>{};
+    var accumulatedHeight = 0.0;
+
+    for (var i = _messages.length - 1; i >= 0; i--) {
+      final text = _messages[i].content;
+      // 各行の折り返しを推定（吹き出し内で約16文字/行）
+      final lines = text.split('\n').fold<int>(0, (sum, line) {
+        return sum + (line.isEmpty ? 1 : (line.length / 16).ceil());
+      });
+      final msgHeight = lines * lineHeight + bubbleOverhead;
+
+      accumulatedHeight += msgHeight;
+      result.add(i);
+      if (accumulatedHeight >= charPanelHeight) break;
+    }
+
+    return result;
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -118,67 +207,64 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
-      body: Stack(
+      body: Column(
         children: [
-          // チャットメッセージ一覧
-          Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
+          // チャットメッセージ一覧（キャラパネルと重ねる）
+          Expanded(
+            child: Stack(
+              children: [
+                ListView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.only(top: 12, bottom: 12),
                   itemCount: _messages.length,
                   itemBuilder: (context, index) {
-                    return ChatBubble(message: _messages[index]);
+                    return ChatBubble(
+                      message: _messages[index],
+                      narrowForCharacter: _narrowIndices.contains(index),
+                    );
                   },
                 ),
-              ),
-              // 入力欄
-              _buildInputBar(),
-            ],
-          ),
-
-          // キャラパネル（右下）— 後で透過動画に差し替え
-          Positioned(
-            right: 8,
-            bottom: 80,
-            child: IgnorePointer(
-              child: Builder(
-                builder: (context) {
-                  // チャット領域の約3割の高さ
-                  final screenHeight = MediaQuery.of(context).size.height;
-                  final charHeight = screenHeight * 0.3;
-                  final charWidth = charHeight * 0.65; // 人物の縦長比率
-                  return Container(
-                    width: charWidth,
-                    height: charHeight,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8D5F5).withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFF7B4FA2).withValues(alpha: 0.3),
-                    style: BorderStyle.solid,
+                // キャラパネル（右下固定）— 後で透過動画に差し替え
+                Positioned(
+                  right: 8,
+                  bottom: 8,
+                  child: IgnorePointer(
+                    child: Builder(
+                      builder: (context) {
+                        final screenHeight = MediaQuery.of(context).size.height;
+                        final charHeight = screenHeight * 0.3;
+                        final charWidth = charHeight * 0.65;
+                        return Container(
+                          width: charWidth,
+                          height: charHeight,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8D5F5).withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: const Color(0xFF7B4FA2).withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.person, size: 48, color: Color(0xFF7B4FA2)),
+                              SizedBox(height: 8),
+                              Text(
+                                'キャラ動画',
+                                style: TextStyle(fontSize: 12, color: Color(0xFF7B4FA2)),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
-                child: const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.person, size: 48, color: Color(0xFF7B4FA2)),
-                    SizedBox(height: 8),
-                    Text(
-                      'キャラ動画',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF7B4FA2),
-                      ),
-                    ),
-                  ],
-                ),
-                  );
-                },
-              ),
+              ],
             ),
           ),
+          // 入力欄
+          _buildInputBar(),
         ],
       ),
     );

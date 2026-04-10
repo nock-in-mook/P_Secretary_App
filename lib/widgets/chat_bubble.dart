@@ -4,15 +4,25 @@ import '../models/message.dart';
 /// LINEライクな吹き出しウィジェット
 class ChatBubble extends StatelessWidget {
   final Message message;
+  final bool narrowForCharacter; // キャラパネルと重なる領域では右を狭める
 
-  const ChatBubble({super.key, required this.message});
+  const ChatBubble({
+    super.key,
+    required this.message,
+    this.narrowForCharacter = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
 
+    // キャラパネル幅 + 余白分だけ右マージンを追加
+    final rightPadding = narrowForCharacter
+        ? MediaQuery.of(context).size.height * 0.3 * 0.65 + 20
+        : 12.0;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: EdgeInsets.only(left: 12, right: rightPadding, top: 4, bottom: 4),
       child: Row(
         mainAxisAlignment:
             isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
