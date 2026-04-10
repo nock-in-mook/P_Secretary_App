@@ -1,21 +1,6 @@
-# セッション履歴
+# セッションログ
 
 ---
-## 秘書App_001_チャットUI構築_Gemini接続_キャラ動画 (2026-04-11)
-
-- Flutter プロジェクト作成、LINEライクチャットUI実装（ライトテーマ、紫ベース）
-- キャラパネル右下配置（動的幅制御で吹き出し被り防止）
-- FastAPI バックエンド実装（Gemini 2.5 Flash統一パイプライン、Bot版から移植）
-- Flutter → FastAPI → Gemini の全経路接続確認
-- キャラ透過動画表示（Web版HTMLオーバーレイ、PCのChromeで透過OK）
-- LivePortraitパラメータ試行錯誤 → パターンO確定（blink 1.5s/σ1.2, pitch 0.9, roll 0.15, brow 0.5）
-- blink_loop.pyのループバグ修正（sin波のt_phase計算）
-- Gemini Flash Imageでキャラ画像再生成（bookworm: ファイル抱え、F06: ベージュニット+多数衣装バリエーション）
-- メモリ記録: Gemini全任せルール、キャラ構図ルール、画像生成モデルリファレンス、LivePortraitパラメータ
-
----
-
-## 📅 2026-04-10 09:28 セッション
 
 🧑 あなた
 やぁ
