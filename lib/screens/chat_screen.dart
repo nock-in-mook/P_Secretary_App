@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/message.dart';
 import '../services/api_service.dart';
+import '../widgets/character_panel.dart';
 import '../widgets/chat_bubble.dart';
 
 /// メインチャット画面
@@ -238,7 +239,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     );
                   },
                 ),
-                // キャラパネル（右下固定）— 後で透過動画に差し替え
+                // キャラパネル（右下固定）
                 Positioned(
                   right: 8,
                   bottom: 8,
@@ -248,27 +249,9 @@ class _ChatScreenState extends State<ChatScreen> {
                         final screenHeight = MediaQuery.of(context).size.height;
                         final charHeight = screenHeight * 0.3;
                         final charWidth = charHeight * 0.65;
-                        return Container(
+                        return CharacterPanel(
                           width: charWidth,
                           height: charHeight,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE8D5F5).withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: const Color(0xFF7B4FA2).withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.person, size: 48, color: Color(0xFF7B4FA2)),
-                              SizedBox(height: 8),
-                              Text(
-                                'キャラ動画',
-                                style: TextStyle(fontSize: 12, color: Color(0xFF7B4FA2)),
-                              ),
-                            ],
-                          ),
                         );
                       },
                     ),
