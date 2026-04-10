@@ -138,13 +138,39 @@ class _ChatScreenState extends State<ChatScreen> {
             ],
           ),
 
-          // キャラパネル用スペース（右下）
-          // TODO: ここに透過動画のキャラクターを配置
-          // Positioned(
-          //   right: 0,
-          //   bottom: 80,
-          //   child: SizedBox(width: 120, height: 160),
-          // ),
+          // キャラパネル（右下）— 後で透過動画に差し替え
+          Positioned(
+            right: 8,
+            bottom: 80,
+            child: IgnorePointer(
+              child: Container(
+                width: 130,
+                height: 180,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8D5F5).withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFF7B4FA2).withValues(alpha: 0.3),
+                    style: BorderStyle.solid,
+                  ),
+                ),
+                child: const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.person, size: 48, color: Color(0xFF7B4FA2)),
+                    SizedBox(height: 8),
+                    Text(
+                      'キャラ動画',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF7B4FA2),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
