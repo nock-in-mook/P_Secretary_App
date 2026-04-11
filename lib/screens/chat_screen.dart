@@ -116,6 +116,12 @@ class _ChatScreenState extends State<ChatScreen> {
         timestamp: DateTime.now().subtract(const Duration(minutes: 3)),
       ),
     ]);
+    // 初回ビルド後に最新メッセージまでジャンプ
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
   }
 
   @override
@@ -144,7 +150,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // FastAPI経由でGeminiに問い合わせ
     try {
-      final response = await ApiService.sendMessage(message: text);
+      final response = await ApiService.sendMessage(
+        message: text,
+        personality: _currentCharId,
+      );
       if (!mounted) return;
       setState(() {
         _messageCounter++;
@@ -261,7 +270,11 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 ListView.builder(
                   controller: _scrollController,
-                  padding: const EdgeInsets.only(top: 12, bottom: 12),
+                  padding: EdgeInsets.only(
+                    top: 12,
+                    // キャラパネルに隠れる分の余白を末尾に確保
+                    bottom: MediaQuery.of(context).size.height * 0.3 + 16,
+                  ),
                   itemCount: _messages.length,
                   itemBuilder: (context, index) {
                     return ChatBubble(
