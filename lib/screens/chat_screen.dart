@@ -20,9 +20,10 @@ class _ChatScreenState extends State<ChatScreen> {
   int _messageCounter = 0;
 
   // 仮のキャラ切り替え: BW=bookworm / F06=銀髪ボブ
+  // 動画ファイル名は拡張子なし。setCharacterVideo側で webm/mp4 を選ぶ。
   static const _characters = {
-    'bw': ('bookworm', 'bw_idle.webm'),
-    'f06': ('銀髪ボブ', 'f06_idle.webm'),
+    'bw': ('bookworm', 'bw_idle'),
+    'f06': ('銀髪ボブ', 'f06_idle'),
   };
   String _currentCharId = 'bw';
 

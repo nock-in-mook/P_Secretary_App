@@ -22,7 +22,15 @@ Widget buildWebCharacterPanel(double width, double height) {
           ..overflow = 'hidden';
 
         final video = web.document.createElement('video') as web.HTMLVideoElement;
-        video.src = 'assets/character_idle.webm';
+        // Safari は VP9 alpha 非対応なので mp4 を、その他は webm を選ぶ
+        final ua = web.window.navigator.userAgent;
+        final isSafari = RegExp(
+          r'^((?!chrome|android).)*safari',
+          caseSensitive: false,
+        ).hasMatch(ua);
+        video.src = isSafari
+            ? 'assets/mp4/character_idle.mp4'
+            : 'assets/character_idle.webm';
         video.autoplay = true;
         video.loop = true;
         video.muted = true;

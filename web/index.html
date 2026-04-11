@@ -34,10 +34,31 @@
 </head>
 <body>
   <!-- キャラクター透過動画（Flutterの上にオーバーレイ） -->
+  <!-- src は下のスクリプトで Safari=mp4 / その他=webm に振り分ける -->
   <video id="character-video" autoplay loop muted playsinline
-    style="position:fixed; bottom:60px; right:8px; height:30vh; z-index:999; pointer-events:none; object-fit:contain;"
-    src="assets/bw_idle.webm">
+    style="position:fixed; bottom:60px; right:8px; height:30vh; z-index:999; pointer-events:none; object-fit:contain;">
   </video>
+  <script>
+    // Safari は VP9 alpha webm を再生できない（黒背景になる）ため
+    // HEVC alpha mp4 を選ぶ。それ以外（Chrome/Edge/Firefox）は webm。
+    window.__pickCharVideoExt = function() {
+      var ua = navigator.userAgent;
+      var isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+      return isSafari ? 'mp4' : 'webm';
+    };
+    // mp4 は web/assets/mp4/ サブフォルダ、webm は web/assets/ 直下
+    window.__charVideoSrc = function(baseName) {
+      var ext = window.__pickCharVideoExt();
+      return ext === 'mp4'
+        ? 'assets/mp4/' + baseName + '.mp4'
+        : 'assets/' + baseName + '.webm';
+    };
+    (function() {
+      var v = document.getElementById('character-video');
+      v.src = window.__charVideoSrc('bw_idle');
+      v.load();
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

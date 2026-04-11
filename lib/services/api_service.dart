@@ -22,7 +22,7 @@ class ApiService {
   static Future<ChatApiResponse> sendMessage({
     required String message,
     String userId = 'default',
-    String personality = 'フレンドリー',
+    String personality = 'bw',
   }) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/chat'),

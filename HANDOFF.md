@@ -1,82 +1,105 @@
 # P_Secretary_App - 申し送り
 
-## 次タスク: Macウォッチャーで透過動画をHEVC alpha mp4に自動変換（**Mac側Claudeで作業**）
+## 直近の状態（2026-04-12 セッション終了時点）
 
-### 背景
-- Flutter Webのキャラ透過動画は現状 `VP9 alpha webm` のみ。
-- Chrome系は透過再生OKだが **iOS Safariは透過にならず黒背景で表示**される。iOSアプリ化後もネイティブAVPlayerが同じく。
-- iOSで透過を出すには **HEVC alpha付きMP4**（Apple独自仕様）が必須。エンコードには Apple の VideoToolbox（ffmpeg `hevc_videotoolbox`）が必要で **Mac限定**。
-- ユーザーは今後キャラの所作・表情動画を大量生成する計画。毎回Macを手動操作するのは現実的でない → **常時起動Macで自動変換するウォッチャー**を設置する。
+### ✅ 完了：透過動画 webm→mp4 自動変換ウォッチャー（Mac常駐）
 
-### 対応ブラウザ/環境の整理
-| 環境 | 必要フォーマット |
-|---|---|
-| Chrome系（PC/Android Web） | VP9 alpha webm ✓既に持ってる |
-| Safari（iOS Web） | HEVC alpha mp4 ←このタスク |
-| iOSネイティブアプリ（将来） | HEVC alpha mp4 ←同じファイル使い回せる |
-| Androidネイティブアプリ（将来） | VP9 alpha webm ←既存流用 |
+**目的**: iOS Safari は VP9 alpha webm を透過再生できず黒背景になるため、HEVC alpha mp4 を別途用意する必要があった。Apple独自仕様で Mac の `hevc_videotoolbox` でしか作れない。新キャラ動画を量産する予定なので常駐ウォッチャー化。
 
-つまり **1キャラ/動作につき webm + mp4 の2ファイル持っておけば全環境カバー**できる。
+**構成**:
+- 監視対象: `web/assets/*.webm`
+- 出力先: `web/assets/mp4/<basename>.mp4`（サブフォルダ）
+- 常駐: `launchd` (Mac起動時に自動起動・クラッシュ時再起動)
+- 方式: **5秒ポーリング**（fswatchはGoogle Drive CloudStorage上のFSEventsが不安定なため不採用）
 
-### ウォッチャー仕様
-1. **監視対象**: `G:/マイドライブ/_Apps2026/P_Secretary_App/web/assets/` （Mac側の同等パス: `/Users/nock_re/Library/CloudStorage/GoogleDrive-yagukyou@gmail.com/マイドライブ/_Apps2026/P_Secretary_App/web/assets/`）
-2. **トリガー**: `*.webm` の新規追加・更新を検知
-3. **処理**:
-   - 同名 `.mp4` が既に存在し、webmより新しい → スキップ
-   - なければ `ffmpeg -i foo.webm -c:v hevc_videotoolbox -allow_sw 1 -alpha_quality 0.75 -tag:v hvc1 foo.mp4` を実行
-   - 同じフォルダに `foo.mp4` を出力
-4. **常駐方法**: `launchd` の `.plist` に登録。Mac起動時に自動起動、クラッシュしても再起動。
-5. **ログ出力**: `~/Library/Logs/p_secretary_video_watcher.log`（ローテーション or サイズ上限）
+**ファイル配置**:
+- 正本スクリプト: `_Apps2026/_mac_scripts/p_secretary_video_watcher.sh`
+- 正本plist: `_Apps2026/_mac_scripts/com.psecretary.video-watcher.plist`
+- インストーラ: `_Apps2026/_mac_scripts/install_video_watcher.sh`
+- 実行コピー: `~/bin/p_secretary_video_watcher.sh`（launchdが実際に読むのはこちら）
+- launchd登録: `~/Library/LaunchAgents/com.psecretary.video-watcher.plist`
+- ログ: `~/Library/Logs/p_secretary_video_watcher.log`
 
-### 実装チェックリスト（Mac側Claude向け）
-- [ ] `ffmpeg` がインストール済みか確認（`which ffmpeg`）。なければ `brew install ffmpeg`
-- [ ] **hevc_videotoolbox が使えるか確認**: `ffmpeg -codecs | grep hevc_videotoolbox`
-- [ ] `fswatch` インストール確認。なければ `brew install fswatch`
-- [ ] 既存 `web/assets/bw_idle.webm` `f06_idle.webm` を手動変換テスト
-  - 変換後のmp4を実機iOS Safariで直接開いて透過されるか検証（背景が黒じゃなく透過ならOK）
-- [ ] ウォッチャー本体（シェルスクリプト or Python）を `G:/マイドライブ/_Apps2026/_mac_scripts/` あたりに配置
-  - ローカル保存禁止ルールがあるので、スクリプト本体もGoogle Drive同期領域に置く
-- [ ] launchd plist 作成 → `launchctl load` で登録
-- [ ] 動作確認: `web/assets/` に test.webm をコピーして数秒以内にmp4が生成されるか
+**スクリプト編集の運用**:
+1. `_mac_scripts/p_secretary_video_watcher.sh` を編集
+2. `bash _mac_scripts/install_video_watcher.sh` を実行（コピー＆launchctl reload）
 
-### Flutter側の対応（Mac側で完結しなくてOK、あとから）
-- index.html の `<video>` タグに `<source type="video/mp4; codecs=hvc1" src="...mp4">` と `<source type="video/webm" src="...webm">` の2本立てにする
-- ブラウザが自動で選ぶ（Safari→mp4、Chrome→webm）
-- `character_switcher_web.dart` も src ではなく source切り替え or video.load() ロジック調整
+**ffmpegエンコード設定（実機検証で確定）**:
+```
+-c:v libvpx-vp9 -i input.webm -an -vf format=yuva420p
+-c:v hevc_videotoolbox -allow_sw 1 -alpha_quality 0.5 -b:v 350k
+-tag:v hvc1 -f mp4
+```
+→ 25fps / 864x1008 / α0.5 / 350k で webm の約1.6〜2.9倍サイズ（1ファイル~1MB前後）
+
+**必須設定（このMacのみ・初回手動）**:
+- システム設定 → プライバシーとセキュリティ → フルディスクアクセス → `/bin/bash` を追加してON
+- 理由: launchd起動のbashがGoogle Drive(CloudStorage)を読み書きするため
+
+### ✅ 完了：Flutter側のwebm/mp4自動切り替え
+
+**Safari判定でファイルを切り替え**：
+- Safari → `assets/mp4/<name>.mp4`
+- それ以外 → `assets/<name>.webm`
+
+修正ファイル：
+- `web/index.html` … 起動時に `window.__pickCharVideoExt()` で判定して初期srcを設定
+- `lib/services/character_switcher_web.dart` … `setCharacterVideo(baseName)` がUA判定
+- `lib/services/character_switcher_stub.dart` … 引数名のみ更新
+- `lib/screens/chat_screen.dart` … `_characters` マップを拡張子なしに変更
+- `lib/widgets/character_panel_web.dart` … 同様にUA判定追加
+
+`flutter analyze` 通過済み。
+
+### 既存webmは変換済み
+- `bw_idle` (568KB) → `mp4/bw_idle.mp4` (1.07MB)
+- `character_idle` (340KB) → `mp4/character_idle.mp4` (992KB)
+- `f06_idle` (655KB) → `mp4/f06_idle.mp4` (1.07MB)
 
 ---
 
-## 現在の状況（今日のセッションで到達した状態）
+## 次のアクション
+
+### 最優先：iOS実機確認
+- Flutter Web起動 → iOS Safari (Tailscale経由) で透過＆切替動作確認
+- 起動コマンド：
+  - `flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080`
+  - FastAPI: `cd api && python main.py`（または既存の起動方法）
+- このMacのTailscale IP: **`100.82.114.118`**
+  - ⚠️ 旧Windows機の `100.117.249.65` は別マシン
+
+### その他のロードマップ
+1. Android Emulator セットアップ（Android Studioで仮想デバイス作成）
+2. 会話履歴のDB永続化（現在インメモリ）→ キャラ仲深まり度システムの土台
+3. Firebase Auth セットアップ
+4. キャラ30種計画の進行（現在は BW / F06 の2キャラ）
+
+---
+
+## 現在の状態（前回セッションからの引き継ぎ）
 
 ### 完成した機能
 - **キャラ切り替え（仮実装）**: AppBarの顔アイコン（PopupMenu）で bookworm ⇄ 銀髪ボブ 切り替え。動画も性格プロンプトも連動して切り替わる
-  - Web版: `character_switcher_web.dart` でDOM経由に `<video>` の src 差し替え
-  - バックエンド: `personality` パラメータで `bw` / `f06` を送信
 - **性格プロンプト2キャラ実装済**:
   - `bw` = シオリ: メガネ読書家、隠れガチゲーマー、弟と同居、慢性寝不足、元空手黒帯（本人は秘密）、ですます調でノリよくツッコむ
   - `f06` = ミサキ: 銀髪ボブ、元気系タメ口
-- **.env 整備**: `api/.env` に GEMINI_API_KEY 設定済み。`.gitignore` に `.env` 追加済み
-- **スマホ（iOS Safari）動作確認済**: Tailscale経由で Flutter Web + FastAPI 接続、シオリ/ミサキの応答確認
+- **.env 整備**: `api/.env` に GEMINI_API_KEY 設定済み
 - **チャット画面の改善**:
   - キャラパネル被り防止の末尾余白（画面高の30% + 16px）
   - 初回ビルド時に最新メッセージへ自動ジャンプ
-- **ガチャ画像生成（セッション027）**: `imagen_batch_027.py` で新プロンプト書き下ろし。**女性123枚 + 男性45枚 = 168枚生成済み** → `realistic/pending/20260411/` に出力
-
-### 既知の問題（Mac側タスクで解消予定）
-- **iOS Safari/Safariで透過動画の背景が黒**（VP9 alpha webm 非対応のため）→ 上記Macウォッチャーで解決
+- **ガチャ画像生成（セッション027）**: 女性123枚 + 男性45枚 = 168枚生成済 → `realistic/pending/20260411/`
 
 ### プロンプト調整履歴（貴重な知見）
 - 最初の「丁寧でやわらか」設定 → メール文体になり却下
 - 例示を緩めすぎ → シオリがタメ口に転倒 → NG例に「タメ口禁止」明示で復帰
-- 無機質すぎる問題 → 具体エピソード（ゲーマー・弟・寝不足・空手）を注入して一気に人格化
-- **残課題**: 初対面で全プロフィールを一気に喋る問題。ROADMAPの「キャラ仲深まり度システム」として記録済み（Phase 3で本実装予定）
+- 無機質すぎる問題 → 具体エピソード（ゲーマー・弟・寝不足・空手）を注入して人格化
+- **残課題**: 初対面で全プロフィールを一気に喋る問題。ROADMAPの「キャラ仲深まり度システム」として記録済み（Phase 3で実装予定）
 
 ### インフラ状態
-- FastAPI: `0.0.0.0:8888` で `--reload` なしの通常起動（`--reload` は Google Drive上の mtime 検知が不安定だった）
-- Flutter Web: `0.0.0.0:8080` で `flutter run -d web-server`
-- Tailscale IP: `100.117.249.65`（スマホ検証用）
-- LAN IP: `192.168.1.3`
-- ファイアウォール: 8080 / 8888 開放済み
+- FastAPI: `0.0.0.0:8888`（`--reload` なし、Google Drive上の mtime 検知が不安定だったため）
+- Flutter Web: `0.0.0.0:8080`
+- Tailscale IP（**Mac**）: `100.82.114.118`
+- ファイアウォール: macOS側はFW無効、Windows側で 8080/8888 開放済
 
 ---
 
@@ -84,22 +107,10 @@
 - **フロントエンド**: Flutter（Web確認用、iOS/Android本番）
 - **バックエンド**: Python FastAPI + Gemini 2.5 Flash（新SDK: google-genai）
 - **インフラ**: 未セットアップ（GCP予定）
-- **キャラ動画**: LivePortrait + birefnet-general透過処理
-
-## 次のアクション（Macタスク後の予定）
-1. **Macウォッチャー実装**（このHANDOFFの最上部）← 次のセッション
-2. HEVC alpha mp4化できたらFlutter側の video タグを `<source>` 2本立てに改修
-3. Android Emulator セットアップ（Android Studioで仮想デバイス作成、スマホ表示確認）
-4. 会話履歴のDB永続化（現在インメモリ）→ キャラ仲深まり度システムの土台
-5. Firebase Auth セットアップ
-6. キャラ30種計画の進行（現在は BW / F06 の2キャラのみ実装）
+- **キャラ動画**: LivePortrait + birefnet-general透過処理 → Macウォッチャーで mp4 自動生成
 
 ## 重要ルール（メモリに記録済み）
 - チャットの自然言語処理は全てGeminiに任せる（プログラム側パース禁止）
 - キャラ画像は胸上+両腕完全に写る構図
 - 画像生成: gemini-2.5-flash-image（上限なし）、imagen-4.0系（1日70枚）
 - 「imagen」= 毎日のガチャ用新規生成のこと
-
-## ファイアウォール開放済み
-- ポート8080（Flutter Web Dev）
-- ポート8888（FastAPI Dev）
