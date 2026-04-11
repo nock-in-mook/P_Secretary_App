@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/message.dart';
 import '../services/api_service.dart';
+import '../services/character_switcher.dart';
 import '../widgets/character_panel.dart';
 import '../widgets/chat_bubble.dart';
 
@@ -17,6 +18,19 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final List<Message> _messages = [];
   int _messageCounter = 0;
+
+  // 仮のキャラ切り替え: BW=bookworm / F06=銀髪ボブ
+  static const _characters = {
+    'bw': ('bookworm', 'bw_idle.webm'),
+    'f06': ('銀髪ボブ', 'f06_idle.webm'),
+  };
+  String _currentCharId = 'bw';
+
+  void _switchCharacter(String id) {
+    if (!_characters.containsKey(id) || id == _currentCharId) return;
+    setState(() => _currentCharId = id);
+    setCharacterVideo(_characters[id]!.$2);
+  }
 
   @override
   void initState() {
@@ -214,11 +228,28 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              // 設定メニュー（後で実装）
-            },
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.face_retouching_natural),
+            tooltip: 'キャラ切り替え',
+            onSelected: _switchCharacter,
+            itemBuilder: (_) => _characters.entries
+                .map((e) => PopupMenuItem<String>(
+                      value: e.key,
+                      child: Row(
+                        children: [
+                          Icon(
+                            e.key == _currentCharId
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_off,
+                            size: 18,
+                            color: const Color(0xFF7B4FA2),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(e.value.$1),
+                        ],
+                      ),
+                    ))
+                .toList(),
           ),
         ],
       ),
