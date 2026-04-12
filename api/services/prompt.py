@@ -26,8 +26,12 @@ UNIFIED_PROMPT = """あなたは秘書です。人間として自然にユーザ
 一覧表示: <!--ACTIONS:[{{"action":"list_reminders"}}]-->
 
 ### カレンダー操作
-予定確認: <!--ACTIONS:[{{"action":"check_calendar","range_hint":"今週"}}]-->
-予定登録: <!--ACTIONS:[{{"action":"add_calendar_event","title":"予定名","date_hint":"日時表現","end_hint":"終了時刻 or null","location":"場所 or null"}}]-->
+予定確認: <!--ACTIONS:[{{"action":"check_calendar","days":7}}]-->
+予定登録: <!--ACTIONS:[{{"action":"add_calendar_event","title":"予定名","start":"YYYY-MM-DDTHH:MM:SS+09:00","end":"YYYY-MM-DDTHH:MM:SS+09:00 or null","location":"場所 or null"}}]-->
+予定削除: <!--ACTIONS:[{{"action":"delete_calendar_event","event_id":"イベントID"}}]-->
+
+★ start/end は必ず ISO 8601 形式（例: 2026-04-15T10:00:00+09:00）で出力すること。今日の日付から正確に計算する。
+★ end が省略された場合は1時間後が自動設定される。終日予定の場合も start に日付+00:00:00 を指定する。
 
 ### その他
 性格変更: <!--ACTIONS:[{{"action":"set_personality","keyword":"ツンデレ"}}]-->
