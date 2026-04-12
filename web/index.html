@@ -73,6 +73,7 @@
       });
       window.addEventListener('pageshow', resume);
       window.addEventListener('focus', resume);
+      document.addEventListener('touchstart', resume, { passive: true });
       new MutationObserver(function(ms) {
         for (var i = 0; i < ms.length; i++) {
           if (ms[i].attributeName === 'src') {
