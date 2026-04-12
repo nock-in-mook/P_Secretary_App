@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../models/message.dart';
 import '../services/api_service.dart';
@@ -16,6 +17,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey _inputBarKey = GlobalKey();
   final List<Message> _messages = [];
   int _messageCounter = 0;
 
@@ -33,9 +35,17 @@ class _ChatScreenState extends State<ChatScreen> {
     setCharacterVideo(_characters[id]!.$2);
   }
 
+  void _syncVideoBottom() {
+    if (!kIsWeb) return;
+    final box = _inputBarKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    updateCharacterVideoBottom(box.size.height);
+  }
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncVideoBottom());
     // デモ用の初期メッセージ
     _messages.addAll([
       Message(
@@ -224,7 +234,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
       appBar: AppBar(
         title: const Row(
           children: [
@@ -286,7 +298,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 // キャラパネル（右下固定）
                 Positioned(
-                  right: 8,
+                  right: 0,
                   bottom: 8,
                   child: IgnorePointer(
                     child: Builder(
@@ -309,11 +321,13 @@ class _ChatScreenState extends State<ChatScreen> {
           _buildInputBar(),
         ],
       ),
+    ),
     );
   }
 
   Widget _buildInputBar() {
     return Container(
+      key: _inputBarKey,
       padding: EdgeInsets.only(
         left: 12,
         right: 8,

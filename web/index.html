@@ -36,7 +36,7 @@
   <!-- キャラクター透過動画（Flutterの上にオーバーレイ） -->
   <!-- src は下のスクリプトで Safari=mp4 / その他=webm に振り分ける -->
   <video id="character-video" autoplay loop muted playsinline
-    style="position:fixed; bottom:60px; right:8px; height:30vh; z-index:999; pointer-events:none; object-fit:contain;">
+    style="position:fixed; bottom:0; right:-12px; width:26vh; height:30vh; z-index:999; pointer-events:none; object-fit:contain; display:none;">
   </video>
   <script>
     // Safari は VP9 alpha webm を再生できない（黒背景になる）ため
@@ -55,6 +55,32 @@
     };
     (function() {
       var v = document.getElementById('character-video');
+      // 動画ロード中の「小→大」や位置ズレを目隠しするため、
+      // loadeddata まで opacity:0、完了後にフェードイン。
+      // src 変更を MutationObserver で検知して自動的に再度隠す。
+      v.addEventListener('canplaythrough', function() {
+        v.style.display = 'block';
+        v.play().catch(function(){});
+      });
+      var resume = function() {
+        if (v.paused) {
+          v.currentTime = v.currentTime;
+          v.play().catch(function(){});
+        }
+      };
+      document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) resume();
+      });
+      window.addEventListener('pageshow', resume);
+      window.addEventListener('focus', resume);
+      new MutationObserver(function(ms) {
+        for (var i = 0; i < ms.length; i++) {
+          if (ms[i].attributeName === 'src') {
+            v.style.display = 'none';
+            break;
+          }
+        }
+      }).observe(v, { attributes: true });
       v.src = window.__charVideoSrc('bw_idle');
       v.load();
     })();

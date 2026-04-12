@@ -21,3 +21,11 @@ void setCharacterVideo(String baseName) {
   video.load();
   video.play();
 }
+
+/// 入力バーの高さに合わせて video の bottom を更新
+void updateCharacterVideoBottom(double height) {
+  final el = web.document.getElementById('character-video');
+  if (el == null) return;
+  final video = el as web.HTMLVideoElement;
+  video.style.setProperty('bottom', '${height}px');
+}
