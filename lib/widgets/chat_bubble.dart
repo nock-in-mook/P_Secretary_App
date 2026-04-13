@@ -5,11 +5,13 @@ import '../models/message.dart';
 class ChatBubble extends StatelessWidget {
   final Message message;
   final bool narrowForCharacter; // キャラパネルと重なる領域では右を狭める
+  final String? iconAssetPath; // 秘書アイコン画像パス
 
   const ChatBubble({
     super.key,
     required this.message,
     this.narrowForCharacter = false,
+    this.iconAssetPath,
   });
 
   @override
@@ -30,10 +32,24 @@ class ChatBubble extends StatelessWidget {
         children: [
           // 秘書アバター（左側）
           if (!isUser) ...[
-            const CircleAvatar(
-              radius: 18,
-              backgroundColor: Color(0xFFE8D5F5),
-              child: Icon(Icons.person, size: 20, color: Color(0xFF7B4FA2)),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: iconAssetPath != null
+                  ? Image(
+                      image: AssetImage(iconAssetPath!),
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8D5F5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.person, size: 22, color: Color(0xFF7B4FA2)),
+                    ),
             ),
             const SizedBox(width: 8),
           ],

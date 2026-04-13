@@ -21,11 +21,10 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<Message> _messages = [];
   int _messageCounter = 0;
 
-  // 仮のキャラ切り替え: BW=bookworm / F06=銀髪ボブ
-  // 動画ファイル名は拡張子なし。setCharacterVideo側で webm/mp4 を選ぶ。
+  // キャラ定義: (表示名, 動画ベース名, アイコン画像パス)
   static const _characters = {
-    'bw': ('bookworm', 'bw_idle'),
-    'f06': ('銀髪ボブ', 'f06_idle'),
+    'bw': ('bookworm', 'bw_idle', 'assets/icons/bw_icon.png'),
+    'f06': ('銀髪ボブ', 'f06_idle', 'assets/icons/f06_icon.png'),
   };
   String _currentCharId = 'bw';
 
@@ -238,15 +237,19 @@ class _ChatScreenState extends State<ChatScreen> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
       appBar: AppBar(
-        title: const Row(
+        title: Row(
           children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: Color(0xFFE8D5F5),
-              child: Icon(Icons.person, size: 18, color: Color(0xFF7B4FA2)),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image(
+                image: AssetImage(_characters[_currentCharId]!.$3),
+                width: 36,
+                height: 36,
+                fit: BoxFit.cover,
+              ),
             ),
-            SizedBox(width: 10),
-            Text('秘書'),
+            const SizedBox(width: 10),
+            const Text('秘書'),
           ],
         ),
         actions: [
@@ -293,6 +296,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     return ChatBubble(
                       message: _messages[index],
                       narrowForCharacter: _narrowIndices.contains(index),
+                      iconAssetPath: _characters[_currentCharId]!.$3,
                     );
                   },
                 ),
