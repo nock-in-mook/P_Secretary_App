@@ -1,87 +1,114 @@
 # P_Secretary_App - 申し送り
 
-## 直近の状態（2026-04-12 セッション終了時点）
+## 直近の状態（2026-04-19 セッション終了時点）
 
-### ✅ 完了：Android Emulator 導入
-- AVD `pixel_test` 作成（API 35 / Google Play / x86_64）
-- 日本語パス問題を `subst K: G:\マイドライブ\_Apps2026` で回避
-- `android/gradle.properties` に `overridePathCheck=true` 追加
-- `hw.keyboard=yes` 設定済み（config.ini）
-- `show_ime_with_hard_keyboard=1` 設定済み（ただしリモートデスクトップ経由のキーボード入力は困難）
+### ✅ 完了：キャラ顔アイコン実装
+- AppBar左 + チャット吹き出し横を角丸四角アイコン化（36x36, 40x40）
+- BW採用: `selfie_red_hood.png` （赤パーカー+公園+自撮りピース）
+- キャラ切り替え時にアイコン自動連動
 
-### ✅ 完了：キャラ動画表示改善
-- display:none → canplaythrough で block（小→大フラッシュ防止）
-- MutationObserver で src 変更検知 → 自動非表示
-- 入力バー高さから動的に bottom 算出（Flutter→JS連携）
-- right:-12px で右端寄せ、width:26vh height:30vh 固定
-- バックグラウンド復帰: visibilitychange + pageshow + focus + touchstart
-- 枠外タップで unfocus（GestureDetector追加）
+### ✅ 完了：F06プロフィール確立＋画像大量生成
+- キャラ設定: 元飲食・自炊派・漫画好き・犬飼いたい（メモリ記録済み）
+- sources/: 日常シチュ40枚超（カフェ・居酒屋・ハロウィン・牧場・ビーチ・花火等）
+- reactions/: 表情20パターン（smile/surprise/think/listen/wink/wave等）
+- outfits/: 服装バリエ32枚
+- candidates/: アイコン候補24枚
+- workshop/: 表情マトリクスコピー
 
-### ✅ 完了：Noto Sans JP フォント適用
-- google_fonts パッケージ追加
-- MaterialApp の theme + appBarTheme に GoogleFonts.notoSansJp() 適用
+### ✅ 完了：動画生成実験
+- Veo 2.0で静止画→リアクション動画テスト
+- LivePortrait不要で直接動画化できる可能性確認
+- ただしグラビア感・口パク問題あり、要プロンプト調整
+- Kling AIも候補として浮上
 
-### ✅ 完了：Google Calendar API 連携
-- GCPプロジェクト `calendar-auto` を再利用（Calendar API有効化済み）
-- OAuth認証フロー実装（google_auth.py）、トークン自動更新対応
-- Calendar CRUD サービス（list/create/delete）
-- チャットから自然言語で予定操作可能（Gemini → ACTIONS → Calendar API）
-- 予定表示の統一フォーマット（📅 日付(曜日) / 時間帯 / タイトル）
-- 認証情報: `api/.env.calendar` + `api/.token.json`（どちらも .gitignore 済み）
+### ✅ 完了：フォルダ構成一本化
+- `character_profiles/{bw,f06}/` に統一
+- web/assets/ から服装バリエ画像を全移動（動画とアイコンは残す）
+- Personal_Secretary/character_workshop/ からコピー（聖域維持）
 
-### ✅ 完了：Imagen バッチ028 生成
-- 女性93枚 + 男性35枚 = 128枚生成（`realistic/pending/20260412/`）
-- 攻めたビジュアル（OKルール廃止、NGだけ守って自由裁量）
-- 文学少女2枚固定（黒髪・眼鏡・パッツン・カーディガン）
-- ビューア（Port 8900）から選別可能
+### ✅ 完了：Imagenガチャ大量生成
+- 20260414: 111枚（女95+男24）初回
+- 20260415: 96枚（女87+男9）
+- 20260416: 124枚（女95+男29）
+- 20260417: 128枚（女100+男28）**NORMAL上限70達成**
+- 20260419: 135枚（女97+男38）**FAST上限38達成**
+- 累計600枚超を生成
+- 運用ルール確立: NORMAL70/ULTRA30/FAST40、日毎削除→選別→生成サイクル
+
+### ✅ 完了：Windows Update自動再起動対策
+- `G:/マイドライブ/_Apps2026/一発更新_WindowsUpdate自動再起動対策.bat`
+- PowerShellスクリプト経由で文字化け回避
+- アクティブ時間6:00〜23:00設定、ログイン中は自動再起動しない
+
+### ✅ 完了：Google Cloud課金確認
+- 有料アカウント確認済（5/29以降も継続可能）
+- $300無料トライアル残高あり（4/15時点で使い切りつつある）
+- 予算アラート月2万円設定済
 
 ---
 
 ## 次のアクション
 
-### 最優先：キャラ顔アイコン作成
-- AppBar左 + チャット吹き出し横のアイコンを秘書の顔画像にする
-- AppBarにイメージ写真（秘書 + 背景）のバナーを入れる
-- キャラ切り替え時にアイコンも連動
-- 画像生成が必要（gemini-2.5-flash-image で作成予定）
+### Phase 1/2 コア機能実装（仕様確定済）
+1. **メモ機能**: `save_memo` / `search_memo` ツール追加
+2. **リマインダー**: `set_reminder` 時刻ベース通知
+3. **ToDo機能**: `add_todo` / `complete_todo` カテゴリ・グループ管理
+4. **Web検索**: `search_web` Google Search Grounding連携
+5. **UI**: メモ帳タブ + リマインダータブ + ToDoタブ
 
-### Imagen バッチ028 の選別
-- `realistic/pending/20260412/` の128枚をビューア（Port 8900）で選別
-- 起動: `cd Personal_Secretary && PYTHONUTF8=1 py -3.14 realistic_server.py`
+### Phase 3（画像認識・プロフィール育成）
+- `analyze_image` → ToDo/メモ/カレンダー自動振り分け
+- 秘書プロフィール自動積み上げ（ユーザー操作ゼロ設計）
+- バックグラウンド処理＋プッシュ通知
 
-### その他のロードマップ
-1. 会話履歴のDB永続化（SQLAlchemy + SQLite → 将来PostgreSQL移行）
-2. リマインダー機能（チャット経由）
-3. メモ機能（チャット経由）
-4. Firebase Auth セットアップ
-5. キャラ30種計画の進行（現在は BW / F06 の2キャラ）
+### 継続作業
+- Imagenガチャ（毎日クォータ上限まで）
+- F06のLivePortrait/Veo動画リアクション制作
+- BWのシチュ画像もF06同様に展開
+- 採用キャラを絞り込む（男女5キャラずつ＋動物でMVPリリース想定）
 
 ---
 
-## 新設ルール（メモリに記録済み）
-- **クロスプラットフォーム優先**: 実装前にWeb/iOS/Android共通で書けるか必ず検討
-- **PLATFORM_TODO.md**: プラットフォーム固有実装したら必ず記録
-- **ローカル開発→本番移行3原則**: ORM必須 / 設定は環境変数 / パス直書き禁止
+## 仕様決定事項（今回議論）
+
+### 秘書プロフィール自動積み上げ（コア機能）
+- 秘書の発言から事実を自動抽出→永続化→次回会話プロンプトに合流
+- **ユーザー操作ゼロ設計**（手動編集/削除なし、泳がせる）
+- 同じベースキャラ（F06）でもユーザーごとに異なる子に育つ
+- 矛盾検知はGeminiに全量投げて自然に繋げさせる
+- Wikipedia風プロフィールページで日付付きで履歴表示
+- 例外: 「このキャラを最初からやり直す」リセットボタンのみ
+
+### 代理系機能のスコープ確定
+- お店/場所ピックアップ・リサーチ・企画段取り・文面代行・比較検討・秘書気遣い・実行一歩手前
+- Web検索グラウンディング + ツールコールで大半カバー
+- 長時間処理は非同期化してプッシュ通知で結果返却
+
+### 画像入力パイプライン
+- 撮影した画像をGemini Flashで解析
+- 内容に応じてToDo/メモ/カレンダー/買い物リストに自動振り分け
+
+---
 
 ## 技術スタック
 - **フロントエンド**: Flutter（Web確認用、iOS/Android本番）
 - **バックエンド**: Python FastAPI + Gemini 2.5 Flash（新SDK: google-genai）
 - **カレンダー**: Google Calendar API（OAuth認証、calendar-auto プロジェクト）
+- **画像生成**: Imagen 4.0（NORMAL/ULTRA/FAST）＋Gemini 2.5 Flash Image（編集用）
+- **動画生成**: Veo 2.0（LivePortrait不要で直接生成可能）、Kling AI候補
 - **インフラ**: ローカル開発中（将来 GCP Cloud Run + Cloud SQL）
-- **キャラ動画**: LivePortrait + birefnet-general透過処理 → Macウォッチャーで mp4 自動生成
-- **フォント**: Noto Sans JP（google_fonts パッケージ）
+- **フォント**: Noto Sans JP（google_fonts）
 
 ## 環境情報
 - Windows Tailscale IP: `100.117.249.65`
-- Mac Tailscale IP: `100.82.114.118`
 - FastAPI: `0.0.0.0:8888`
-- Flutter Web: `0.0.0.0:8080`（`subst K:` 経由で起動）
-- 画像ビューア: Port 8900（リアル）/ Port 8899（ガチャ）
-- Android EMU: `flutter emulators --launch pixel_test`（subst K: 必須）
+- Flutter Web: `0.0.0.0:8080`（`subst K:` 経由）
+- 画像ビューア: Port 8900（realistic）
 
-## 重要ルール（メモリに記録済み）
-- チャットの自然言語処理は全てGeminiに任せる（プログラム側パース禁止）
+## 重要ルール（メモリ記録済み）
+- Gemini全任せ（プログラム側パース禁止）
 - キャラ画像は胸上+両腕完全に写る構図
-- 画像生成: gemini-2.5-flash-image（上限なし）、imagen-4.0系（1日70枚）
-- 「imagen」= 毎日のガチャ用新規生成のこと
-- 聖域フォルダ: realistic/favorites, character_workshop, gacha_favorites は絶対削除禁止
+- 「imagen」= 毎日のガチャ用新規生成
+- Flash Imageはゼロ生成NG、編集専用
+- 聖域フォルダ: realistic/favorites, character_workshop, gacha_favorites
+- Imagenルール: NORMAL女70枚 / ULTRA女30枚 / FAST男40枚目安
