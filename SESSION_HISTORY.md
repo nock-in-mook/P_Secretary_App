@@ -6831,3 +6831,25 @@ BW用の「白ニット・オフショル・パーカー・タートルネック
 - **仕様議論**: メモ/リマインダー/ToDo/Web検索/画像認識/秘書プロフィール自動積み上げ
 - プロフィール積み上げは「ユーザー操作ゼロ・泳がせる」設計で確定。同じキャラでもユーザーごとに異なる子に育つ仕組み
 - ROADMAPに Phase 1/2/3 機能を詳細追記
+
+---
+## 秘書App_006_ストア戦略確立＋Imagen男性ガチャ (2026-04-26)
+
+- Imagen #029 ガチャ実行（男性101枚、前髪おろし強化、NORMAL69+ULTRA31+FAST1、失敗0）
+  - スクリプト `imagen_batch_029.py` 新規作成、出力先 `Personal_Secretary/realistic/pending/20260420/male/`
+  - カーテンバングス・シースルー・コンマヘア等で前髪おろし系70%構成
+- 画像ビューア起動（http://localhost:8900/realistic_viewer.html）
+- **ストア審査・地域戦略の骨格を確立**（ROADMAP +355行追加、3コミット）
+  - AIコンパニオン規制事例: Replika/ChatGPT/Character.AI/AI Girlfriend一斉削除/Iruda/Lensa
+  - 主要法規制: EU AI Act、SB 243（カリフォルニア・2026/1施行）、COPPA、GDPR、APPI
+  - 「Companion chatbot」定義回避戦略: マーケは「業務アシスタント」に寄せる
+  - **採用方針**: アジア優先（日本+中華圏+韓国+東南アジア）→ 欧米は完全分離で後追い
+- **3大設計原則を確立**（memory記録）
+  1. キャラ分離アーキテクチャ＋段階的フォールバック（Lv.0女の子→Lv.4マスコット）
+  2. 本体機能の品質方針（キャラ非依存で勝てる機能）
+  3. コンテンツモデレーション徹底防御（多層防御・本体側実装）
+- 法務相談予定セクション準備（SF在住の友人弁護士、質問リスト7項目）
+- メモ・リマインダー機能の合流計画確定
+  - Memolette-Flutter / reminder_flutter から後で合流
+  - 秘書アプリ側で独自実装しない（合流タイミングをユーザー確認してから動く）
+- memory追加3件: project_store_strategy / project_core_design_principles / project_merge_plan
